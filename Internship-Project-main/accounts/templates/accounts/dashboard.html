@@ -1,0 +1,136 @@
+{# accounts/templates/accounts/dashboard.html #}
+{% extends "accounts/base.html" %}
+{% load static %}
+{% block title %}User Dashboard{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/user_dashboard.css' %}">
+
+
+<section class="ud-wrap">
+  <div class="ud-container"> 
+    <h1 class="ud-page-title">User Dashboard</h1>
+
+    <div class="ud-cards">
+
+      <!-- 1) PROFILE OVERVIEW -->
+      <article class="ud-card">
+           <div class="ud-card-head">
+            <div class="ud-head-left">
+             <img class="ud-avatar" src="{% static 'image/logo.png' %}" alt="avatar">
+              <h2 class="ud-card-title">Profile Overview</h2>
+           </div>
+           <button id="editToggleBtn" class="ud-btn">✏ Edit</button>
+           </div>
+
+
+
+        <!-- Display info -->
+        <div id="profileDisplay" class="ud-lines">
+        <div><span class="ud-k">User ID:</span> <span class="ud-v">{{ account_user.user_id }}</span></div>
+        <div><span class="ud-k">Name:</span> <span class="ud-v">{{ account_user.username }}</span></div>
+        <div><span class="ud-k">Email:</span> <span class="ud-v">{{ account_user.email }}</span></div>
+        <div><span class="ud-k">Profile Info:</span> <span class="ud-v">{{ account_user.profile_info|default:"— not set —" }}</span></div>
+        <div><span class="ud-k">Preferences:</span> <span class="ud-v">{{ account_user.preferences|default:"— not set —" }}</span></div>
+        </div>
+
+
+        <!-- Inline edit form (hidden by default) -->
+         <form id="profileForm" method="post" action="{% url 'profile_edit' %}" class="ud-edit-form is-hidden" novalidate>
+    {% csrf_token %}
+
+    <div class="ud-field">
+      <label class="ud-label">Profile Info</label>
+      <textarea name="profile_info" rows="3" class="ud-input"
+                placeholder="Tell us something about you">{{ account_user.profile_info }}</textarea>
+    </div>
+
+    <div class="ud-field">
+      <label class="ud-label">Preferences</label>
+      {% with prefs=account_user.preferences|default:"" %}
+      <div class="ud-checkbox-grid">
+        <label class="ud-check">
+          <input type="checkbox" name="preferences" value="Tech Fest"
+                 {% if "Tech Fest" in prefs %}checked{% endif %}>
+          <span>Tech Fest</span>
+        </label>
+        <label class="ud-check">
+          <input type="checkbox" name="preferences" value="Cultural Fest"
+                 {% if "Cultural Fest" in prefs %}checked{% endif %}>
+          <span>Cultural Fest</span>
+        </label>
+        <label class="ud-check">
+          <input type="checkbox" name="preferences" value="Sports Events"
+                 {% if "Sports Events" in prefs %}checked{% endif %}>
+          <span>Sports Events</span>
+        </label>
+        <label class="ud-check">
+          <input type="checkbox" name="preferences" value="Workshops"
+                 {% if "Workshops" in prefs %}checked{% endif %}>
+          <span>Workshops</span>
+        </label>
+        <label class="ud-check">
+          <input type="checkbox" name="preferences" value="Seminars"
+             {% if "Seminars" in prefs %}checked{% endif %}>
+          <span>Seminars</span>
+        </label>
+      </div>
+      {% endwith %}
+      <small class="ud-help">Pick as many as you like.</small>
+      </div>
+
+      <div class="ud-actions">
+      <button type="button" id="cancelBtn" class="ud-btn-light">Cancel</button>
+      <button type="submit" class="ud-btn">Save Changes</button>
+      </div>
+  </form>
+</article>
+
+      <!-- 2) RECENT EVENTS REGISTERED -->
+      <article class="ud-card">
+        <div class="ud-card-head">
+          <h2 class="ud-card-title">Recent Events Registered</h2>
+        </div>
+
+        {% if registrations %}
+          <ul class="ud-list">
+            {% for r in registrations %}
+              <li>{{ r.label }} {% if r.date_str %}<span class="ud-muted">— {{ r.date_str }}</span>{% endif %}</li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="ud-muted">No registrations yet.</p>
+        {% endif %}
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<script>
+  (function () {
+    const editBtn  = document.getElementById('editToggleBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const display  = document.getElementById('profileDisplay');
+    const form     = document.getElementById('profileForm');
+
+    function showForm(show) {
+      if (show) {
+        display.classList.add('is-hidden');
+        form.classList.remove('is-hidden');
+      } else {
+        form.classList.add('is-hidden');
+        display.classList.remove('is-hidden');
+      }
+      // keep the whole card in view
+      form.closest('.ud-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    editBtn.addEventListener('click', () => showForm(true));
+    cancelBtn.addEventListener('click', () => showForm(false));
+    // start hidden
+    showForm(false);
+  })();
+</script>
+
+{% endblock %}

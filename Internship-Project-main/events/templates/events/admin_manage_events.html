@@ -1,0 +1,59 @@
+{% extends "accounts/base.html" %}
+{% load static %}
+{% block title %}Manage Events{% endblock %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/manage_events.css' %}">
+
+<div class="manage-container">
+  <div class="header-row">
+    <h2>Manage Events{% if college %} — {{ college.name }}{% endif %}</h2>
+    <a href="{% url 'events:admin_create_event' %}" class="btn-create">+ Create Event</a>
+  </div>
+
+  {% if events %}
+    <div class="card-container">
+      <table class="styled-table">
+        <thead>
+          <tr>
+            <th>Event ID</th>
+            <th>Title</th>
+            <th>Date & Time</th>
+            <th>Location</th>
+            <th>Image</th>
+            <th style="width:160px">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in events %}
+            <tr>
+              <td>{{ e.event_id }}</td>
+              <td>{{ e.title }}</td>
+              <td>{{ e.date_time|date:"M d, Y, g:i A" }}</td>
+              <td>{{ e.location }}</td>
+              <td>
+                {% if e.image_url %}
+                  <img src="{{ e.image_url }}" alt="" style="width:44px;height:44px;object-fit:cover;border-radius:6px;display:block;margin-bottom:4px;">
+                  <small class="text-muted" style="display:block;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                    {{ e.image_url }}
+                  </small>
+                {% else %}
+                  <span class="text-muted">—</span>
+                {% endif %}
+              </td>
+              <td>
+                <a href="{% url 'events:admin_edit_event' e.event_id %}" class="btn-action edit">Edit</a>
+                <form method="post" action="{% url 'events:admin_delete_event' e.event_id %}" class="inline-form">
+                  {% csrf_token %}
+                  <button class="btn-action delete" onclick="return confirm('Delete {{ e.title }}?')">Delete</button>
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="no-events">No events yet. Create your first one!</div>
+  {% endif %}
+</div>
+{% endblock %}

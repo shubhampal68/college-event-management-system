@@ -1,0 +1,39 @@
+{% extends "accounts/base.html" %}
+{% load static %}
+{% block title %}College Events Portal • Forever Fest{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/colleges.css' %}">
+
+<section class="col-wrap">
+  <header class="portal-header">
+    <h1>College Events Portal</h1>
+    <p class="subtitle">Select a college to view upcoming events</p>
+    <a href="{% url 'events:events_page' %}" class="back-button">All College Events →</a>
+  </header>
+
+  <div class="grid-container">
+    {% for col in colleges %}
+      <div class="college-card">
+        <div class="college-logo">
+          {# Prefer ImageField .url if present, otherwise fall back to logo_url string #}
+          {% if col.logo %}
+            <img src="{{ col.logo.url }}" alt="{{ col.name }} logo">
+          {% elif col.logo_url %}
+            <img src="{{ col.logo_url }}" alt="{{ col.name }} logo">
+          {% else %}
+            <span class="no-logo">No logo</span>
+          {% endif %}
+        </div>
+
+        <h2 class="college-name">
+          <a href="{% url 'events:events_by_college' college_id=col.college_id %}">{{ col.name }}</a>
+        </h2>
+        <p class="college-location">{{ col.location }}</p>
+      </div>
+    {% empty %}
+      <p>No colleges found.</p>
+    {% endfor %}
+  </div>
+</section>
+{% endblock %}

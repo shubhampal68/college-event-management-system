@@ -1,0 +1,217 @@
+
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+  
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{% block title %}Forever Fest{% endblock %}</title>
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+</head>
+<body>
+   <header class="navbar">
+  <div class="left-section">
+    <!-- Hamburger -->
+    <button class="menu-icon" id="menuTrigger" aria-controls="sideMenu" aria-expanded="false" aria-label="Open menu">
+      &#9776;
+    </button>
+    <!-- Side Drawer -->
+    <nav class="side-menu" id="sideMenu" aria-hidden="true">
+  {# ===== ADMIN MENU (custom AdminProfile session) ===== #}
+  {% if request.session.admin_id %}
+    <div class="side-title">Welcome, Admin!</div>
+    <a href="{% url 'admin_dashboard' %}">Dashboard</a>
+    <a href="{% url 'events:admin_create_event' %}">Create Event</a>
+    <a href="{% url 'events:admin_manage_events' %}">Manage Events</a>
+   <a href="{% url 'registrations:admin_registrations_overview' %}">Registrations (Update)</a>
+    <a href="{% url 'events:sponsorship_hub' %}">Sponsorship</a>
+    <a href="{% url 'events:admin_analytics' %}">Insights / Analytics</a>
+    <a href="{% url 'events:admin_event_reviews' %}">Event Reviews</a>
+    <a href="{% url 'events:admin_event_ugc' %}">Event Ugc</a>
+
+    <hr>
+    <a href="{% url 'admin_logout' %}" class="logout-link">Logout</a>
+
+  {# ===== USER MENU (custom UserProfile session) ===== #}
+  {% elif request.session.user_id %}
+    <div class="side-title">
+      {% if account_user %}Welcome, {{ account_user.username }}!{% else %}Welcome!{% endif %}
+    </div>
+    <a href="{% url 'dashboard' %}">Dashboard</a>
+    <a href="{% url 'home' %}">Home</a>
+    <a href="{% url 'events:events_page' %}">Events</a>
+    <a href="{% url 'ugc:my_ugc' %}">My UGC</a>
+    <hr>
+    <a href="{% url 'logout' %}" class="logout-link">Logout</a>
+
+  {# ===== PUBLIC MENU ===== #}
+  {% else %}
+    <div class="side-title">Menu</div>
+    <a href="{% url 'admin_login' %}">Admin Login</a>
+    <a href="{% url 'login' %}">User Login</a>
+    <a href="{% url 'events:sponsorship_hub' %}">Sponsorship</a>
+  {% endif %}
+</nav>
+    <!-- Overlay (click to close) -->
+    <div id="overlay" class="overlay" hidden></div>
+
+            <img src="{% static 'image/logo.png' %}" alt="Logo" />
+            <div class="site-title"><h1>Forever Fest</h1></div>
+
+        </div>
+
+        <nav class="nav-links">
+            <a href="{% url 'home' %}">Home</a>
+            <a href="{% url 'colleges:college_event_portal' %}">Events</a>
+            <a href="">About Us</a>
+            <a href="">Contact</a>
+        </nav>
+<form class="search-bar" method="get" action="{% url 'search' %}" id="searchForm" autocomplete="off">
+  <input
+    type="text"
+    name="q"
+    id="searchInput"
+    placeholder="Search colleges or events…"
+    hx-get="{% url 'search_suggest' %}"
+    hx-trigger="keyup changed delay:300ms"
+    hx-target="#searchSuggest"
+    hx-swap="innerHTML"
+  >
+  <button type="submit" aria-label="Search"><i class="fas fa-search"></i></button>
+</form>
+<div class="search-suggest" id="searchSuggest"></div>
+
+        <div class="right-section">
+         <div class="nav-buttons">
+
+        {# ----- Custom Admin session (AdminProfile) ----- #}
+        {% if request.session.admin_id %}
+        <a href="{% url 'admin_dashboard' %}" class="btn admin">Admin Dashboard</a>
+        <a href="{% url 'admin_logout' %}" class="btn login">Logout</a>
+
+        {# ----- Custom User session (UserProfile) ----- #}
+        {% elif request.session.user_id %}
+        {% if account_user %}
+        <span class="user-welcome">Hi, {{ account_user.username }}</span>
+        &nbsp;
+        {% endif %}
+        <a href="{% url 'dashboard' %}" class="btn login">Dashboard</a>
+        <a href="{% url 'logout' %}" class="btn admin">Logout</a>
+
+         {# ----- Visitor (not logged in) ----- #}
+         {% else %}
+         <a href="{% url 'login' %}" class="btn login">Login</a>
+         <a href="{% url 'admin_login' %}" class="btn admin">Admin</a>
+         {% endif %}
+
+         </div>
+        </div>
+    </header>
+
+<!-- Overlay -->
+  <div id="overlay" class="overlay" hidden></div>
+
+    {% block content %}{% endblock %}
+
+    <script src="{% static 'js/main.js' %}"></script>
+   <script>
+document.addEventListener('DOMContentLoaded', function(){
+  const drawer  = document.getElementById('sideMenu');
+  const overlay = document.getElementById('overlay');
+  const trigger = document.getElementById('menuTrigger');
+
+  if (!drawer || !overlay || !trigger) {
+    console.warn('Side menu: required elements not found (sideMenu / overlay / menuTrigger).');
+    return;
+  }
+
+  function openMenu(){
+    drawer.classList.add('open');
+    drawer.setAttribute('aria-hidden','false');
+    overlay.hidden = false;
+    requestAnimationFrame(()=> overlay.classList.add('show'));
+  }
+  function closeMenu(){
+    drawer.classList.remove('open');
+    drawer.setAttribute('aria-hidden','true');
+    overlay.classList.remove('show');
+    setTimeout(()=>{ overlay.hidden = true; }, 250);
+  }
+  function toggleMenu(){
+    drawer.classList.contains('open') ? closeMenu() : openMenu();
+  }
+
+  // open/close handlers
+  trigger.addEventListener('click', toggleMenu);
+  overlay.addEventListener('click', closeMenu);
+
+  // ESC to close
+  document.addEventListener('keydown', (e)=>{
+    if (e.key === 'Escape' && drawer.classList.contains('open')) closeMenu();
+  });
+
+  // close when a link is clicked
+  drawer.querySelectorAll('a').forEach(a => a.addEventListener('click', closeMenu));
+});
+</script>
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const group = document.querySelector('.btn-group');
+    if (!group) return;
+
+    const [userBtn, adminBtn] = group.querySelectorAll('.btn');
+
+    const setActive = (active) => {
+      [userBtn, adminBtn].forEach(b => b.classList.remove('active', 'btn-primary'));
+      [userBtn, adminBtn].forEach(b => b.classList.add('btn-light'));
+      active.classList.remove('btn-light');
+      active.classList.add('btn-primary', 'active');
+    };
+
+    userBtn?.addEventListener('click', () => setActive(userBtn));
+    adminBtn?.addEventListener('click', () => setActive(adminBtn));
+  });
+</script>
+
+<script>
+  document.querySelector('.subscribe-form')?.addEventListener('submit', function (e) {
+    const email = this.querySelector('input[type="email"]');
+    if (!email.value || !email.checkValidity()) {
+      e.preventDefault();
+      email.focus();
+    }
+  });
+</script>
+
+  <script>
+    function hideAllPages() {
+      document.querySelectorAll('.page').forEach(p => {
+        p.classList.remove('active', 'fade-in');
+      });
+    }
+    function showEvents(id) {
+      hideAllPages();
+      const el = document.getElementById(id);
+      el.classList.add('active');
+      void el.offsetWidth; // restart animation
+      el.classList.add('fade-in');
+    }
+    function showColleges() {
+      hideAllPages();
+      const home = document.getElementById('colleges-page');
+      home.classList.add('active');
+      void home.offsetWidth;
+      home.classList.add('fade-in');
+    }
+  </script>
+
+</body>
+</html>
